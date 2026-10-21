@@ -9,6 +9,12 @@ The API uses access tokens only. Tokens are signed JWTs and are not stored in th
 3. Install dependencies with `npm install`, then generate the Prisma client with `npx prisma generate`. This reads the existing `users` table model and does not modify the database.
 4. Start development mode with `npm run dev`, or build and run with `npm run build` followed by `npm start`.
 
+## GoDaddy deployment
+
+`DATABASE_URL` and `JWT_ACCESS_SECRET` must be set for the running Node.js application on GoDaddy. Add both as environment variables in the hosting application's settings, or securely upload a `.env` file to the project root (the same directory as `package.json`). `.env` is excluded from Git, so it is not included in a normal repository deployment. The application loads that root-level file even if GoDaddy starts Node.js with a different working directory.
+
+Set `DATABASE_URL` to the credentials and host of the MySQL database created for the GoDaddy account, using the format `mysql://USER:PASSWORD@HOST:3306/DATABASE`. Set `JWT_ACCESS_SECRET` to a private random value of at least 32 characters; do not use the example placeholder or commit real credentials. Keep `NODE_ENV=production`, set `CORS_ORIGINS` to the exact frontend origin(s), then restart the Node.js application after changing settings. The database must allow connections from the application host.
+
 The example endpoints use `http://localhost:3000`. All responses are JSON. Public-registration input rejects unknown properties, including `role` and `status`.
 
 ## Endpoints

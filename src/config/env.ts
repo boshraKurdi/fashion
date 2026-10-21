@@ -1,5 +1,9 @@
-import "dotenv/config";
+import { config } from "dotenv";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
+
+config({ path: resolve(dirname(fileURLToPath(import.meta.url)), "../../.env") });
 
 const environmentSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
@@ -30,7 +34,8 @@ if (!parsedEnvironment.success) {
     .join("\n");
   throw new Error(
     `Invalid environment configuration.\n` +
-      `Create a .env file in the project root (copy .env.example to .env) and set the required values:\n` +
+      `Set the required values in the hosting environment or add a .env file to the project root ` +
+      `(copy .env.example to .env locally):\n` +
       details,
   );
 }
