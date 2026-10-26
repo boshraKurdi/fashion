@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { corsOrigins, env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { marketplaceRouter } from "./marketplace.routes.js";
 
 export const app = express();
 
@@ -23,6 +24,7 @@ app.use(
 );
 app.use(express.json({ limit: "10kb" }));
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1", marketplaceRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
