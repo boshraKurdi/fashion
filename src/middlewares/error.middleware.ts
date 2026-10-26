@@ -41,6 +41,7 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   if (env.NODE_ENV !== "production") {
     const details: Record<string, unknown> = {
       name: error instanceof Error ? error.name : "UnknownError",
+      message: error instanceof Error ? error.message : String(error),
     };
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -51,7 +52,11 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
       details.errorCode = error.errorCode;
     }
 
-    console.error("Unhandled request error", details);
+    if (error instanceof Error) {
+      console.error("Unhandled request error", details, error.stack);
+    } else {
+      console.error("Unhandled request error", details);
+    }
   }
 
   res.status(500).json({ success: false, message: "Internal server error" });

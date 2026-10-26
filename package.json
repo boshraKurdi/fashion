@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/modules/auth/auth.validation.test.ts",
+    "seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate"
   },
   "keywords": [],
