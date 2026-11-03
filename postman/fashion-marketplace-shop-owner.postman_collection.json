@@ -1,0 +1,327 @@
+{
+  "info": {
+    "name": "Fashion Marketplace - Shop Owner Dashboard",
+    "description": "Shop-owner dashboard APIs. Sign in as a SHOP_OWNER and set accessToken to the returned JWT. Product images are accepted as paths until an upload provider is configured.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Successful HTTP status', function () { pm.expect(pm.response.code).to.be.within(200, 299); });",
+          "pm.test('Success response envelope', function () {",
+          "  const body = pm.response.json();",
+          "  pm.expect(body).to.have.property('success', true);",
+          "  if (body.meta) {",
+          "    pm.expect(body.data).to.be.an('array');",
+          "    pm.expect(body.meta).to.have.all.keys('page', 'limit', 'total', 'totalPages');",
+          "  } else if (Object.prototype.hasOwnProperty.call(body, 'data')) {",
+          "    pm.expect(body).to.have.property('data');",
+          "  } else {",
+          "    pm.expect(body.message).to.be.a('string');",
+          "  }",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "productId", "value": "1" },
+    { "key": "imageId", "value": "1" },
+    { "key": "variantId", "value": "1" },
+    { "key": "orderId", "value": "1" },
+    { "key": "offerId", "value": "1" },
+    { "key": "branchId", "value": "1" },
+    { "key": "planId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get dashboard overview",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/dashboard" }
+        }
+      ]
+    },
+    {
+      "name": "Shop Profile",
+      "item": [
+        {
+          "name": "Get my shop",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/shop" }
+        },
+        {
+          "name": "Update my shop",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Atelier North\",\n  \"description\": \"Contemporary fashion and accessories\",\n  \"phone\": \"+1 555 0100\",\n  \"email\": \"shop@example.com\",\n  \"logo\": \"/uploads/atelier-logo.jpg\",\n  \"coverImage\": \"/uploads/atelier-cover.jpg\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/shop"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List products",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/products?page=1&limit=10&search=shirt&status=ACTIVE&sortBy=newest&sortOrder=desc" }
+        },
+        {
+          "name": "Get product",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}" }
+        },
+        {
+          "name": "Create product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Linen Shirt\",\n  \"description\": \"Relaxed-fit linen shirt\",\n  \"categoryId\": \"1\",\n  \"brandId\": null,\n  \"price\": 59.99,\n  \"salePrice\": 49.99,\n  \"status\": \"DRAFT\",\n  \"images\": [\n    { \"image\": \"/uploads/linen-shirt-front.jpg\", \"isPrimary\": true, \"sortOrder\": 0 },\n    { \"image\": \"/uploads/linen-shirt-back.jpg\", \"isPrimary\": false, \"sortOrder\": 1 }\n  ],\n  \"variants\": [\n    { \"colorId\": \"1\", \"sizeId\": \"1\", \"price\": 59.99, \"salePrice\": 49.99, \"sku\": \"LINEN-SHIRT-NAVY-M\" }\n  ]\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/products"
+          }
+        },
+        {
+          "name": "Update product",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Linen Shirt - Updated\",\n  \"price\": 62.50,\n  \"salePrice\": 52.50\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}"
+          }
+        },
+        {
+          "name": "Archive product",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}" }
+        },
+        {
+          "name": "Update product status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"HIDDEN\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product Images",
+      "item": [
+        {
+          "name": "Add product image",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"image\": \"/uploads/linen-shirt-detail.jpg\",\n  \"isPrimary\": false,\n  \"sortOrder\": 2\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}/images"
+          }
+        },
+        {
+          "name": "Update product image",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"isPrimary\": true,\n  \"sortOrder\": 0\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}/images/{{imageId}}"
+          }
+        },
+        {
+          "name": "Delete product image",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}/images/{{imageId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Product Variants",
+      "item": [
+        {
+          "name": "Add product variant",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"colorId\": \"1\",\n  \"sizeId\": \"1\",\n  \"price\": 59.99,\n  \"salePrice\": 49.99,\n  \"sku\": \"LINEN-SHIRT-NAVY-M\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}/variants"
+          }
+        },
+        {
+          "name": "Update product variant",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 61.99,\n  \"salePrice\": 51.99\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}/variants/{{variantId}}"
+          }
+        },
+        {
+          "name": "Delete product variant",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}/variants/{{variantId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List orders",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/orders?page=1&limit=10&status=PENDING&paymentStatus=PAID&startDate=2026-01-01T00%3A00%3A00.000Z&endDate=2026-12-31T23%3A59%3A59.999Z&orderNumber=FM-2026" }
+        },
+        {
+          "name": "Get order",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/orders/{{orderId}}" }
+        },
+        {
+          "name": "Update order status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CONFIRMED\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/orders/{{orderId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Offers",
+      "item": [
+        {
+          "name": "List offers",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/offers?page=1&limit=10&status=ACTIVE" }
+        },
+        {
+          "name": "Get offer",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/offers/{{offerId}}" }
+        },
+        {
+          "name": "Create offer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Winter Edit\",\n  \"description\": \"Seasonal savings on selected items\",\n  \"image\": \"/uploads/winter-edit.jpg\",\n  \"discountType\": \"PERCENTAGE\",\n  \"discountValue\": 15,\n  \"startAt\": \"2026-12-01T00:00:00.000Z\",\n  \"endAt\": \"2027-01-31T23:59:59.000Z\",\n  \"productIds\": [\"{{productId}}\"]\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/offers"
+          }
+        },
+        {
+          "name": "Update offer",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Summer Edit - Updated\",\n  \"discountValue\": 20,\n  \"productIds\": [\"{{productId}}\"]\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/offers/{{offerId}}"
+          }
+        },
+        {
+          "name": "Delete offer",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/shop-owner/offers/{{offerId}}" }
+        },
+        {
+          "name": "Update offer status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"ACTIVE\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/offers/{{offerId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Branches",
+      "item": [
+        {
+          "name": "List branches",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/branches" }
+        },
+        {
+          "name": "Get branch",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/branches/{{branchId}}" }
+        },
+        {
+          "name": "Create branch",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Downtown Store\",\n  \"address\": \"100 Market Street\",\n  \"phone\": \"+1 555 0110\",\n  \"city\": \"New York\",\n  \"area\": \"Manhattan\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.0060\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/branches"
+          }
+        },
+        {
+          "name": "Update branch",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+1 555 0199\",\n  \"area\": \"Central Manhattan\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/branches/{{branchId}}"
+          }
+        },
+        {
+          "name": "Deactivate branch (safe delete)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/shop-owner/branches/{{branchId}}" }
+        },
+        {
+          "name": "Update branch status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"INACTIVE\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/branches/{{branchId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "List reviews",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/reviews?page=1&limit=10&rating=5&sortBy=newest&sortOrder=desc" }
+        },
+        {
+          "name": "Get review summary",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/reviews/summary" }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Get current subscription",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/subscription" }
+        },
+        {
+          "name": "Get subscription history",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/subscription/history?page=1&limit=10" }
+        },
+        {
+          "name": "List available plans",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/shop-owner/subscription/plans" }
+        },
+        {
+          "name": "Request subscription",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"planId\": \"{{planId}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/shop-owner/subscription"
+          }
+        }
+      ]
+    }
+  ]
+}
