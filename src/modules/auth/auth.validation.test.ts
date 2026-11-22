@@ -4,6 +4,8 @@ import {
   changePasswordSchema,
   loginSchema,
   registerSchema,
+  verificationEmailSchema,
+  verifyEmailSchema,
 } from "./auth.validation.js";
 
 const strongPassword = "FashionPass1!";
@@ -80,4 +82,17 @@ test("password change requires a distinct confirmed strong password", () => {
     newPassword: strongPassword,
     newPasswordConfirmation: strongPassword,
   }).success, false);
+});
+
+test("verification requests validate and normalize their inputs", () => {
+  assert.deepEqual(verificationEmailSchema.parse({ email: "CUSTOMER@example.com" }), {
+    email: "customer@example.com",
+  });
+  assert.equal(verificationEmailSchema.safeParse({ email: "not-an-email" }).success, false);
+  assert.deepEqual(verifyEmailSchema.parse({ email: "CUSTOMER@example.com", code: "004201" }), {
+    email: "customer@example.com",
+    code: "004201",
+  });
+  assert.equal(verifyEmailSchema.safeParse({ email: "customer@example.com", code: "12345" }).success, false);
+  assert.equal(verifyEmailSchema.safeParse({ email: "customer@example.com", code: "1234567" }).success, false);
 });

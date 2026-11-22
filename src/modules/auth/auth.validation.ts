@@ -68,6 +68,16 @@ export const changePasswordSchema = z
     path: ["newPassword"],
   });
 
+export const verificationEmailSchema = z.object({
+  email: z.string().trim().email().max(190).transform((value) => value.toLowerCase()),
+}).strict();
+
+export const verifyEmailSchema = z.object({
+  email: z.string().trim().email().max(190).transform((value) => value.toLowerCase()),
+  code: z.string().regex(/^\d{6}$/, "Verification code must contain six digits"),
+}).strict();
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;

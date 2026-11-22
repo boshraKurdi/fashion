@@ -4,7 +4,7 @@ The API uses access tokens only. Tokens are signed JWTs and are not stored in th
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and supply the credentials for the existing MySQL database.
+1. Copy `.env.example` to `.env` and supply the credentials for the existing MySQL database and SMTP mail server.
 2. Generate a JWT secret, for example with `node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"`, and put its output in `JWT_ACCESS_SECRET`.
 3. Install dependencies with `npm install`, then generate the Prisma client with `npx prisma generate`. This reads the existing `users` table model and does not modify the database.
 4. Start development mode with `npm run dev`, or build and run with `npm run build` followed by `npm start`.
@@ -24,7 +24,7 @@ The example endpoints use `http://localhost:3000`. All responses are JSON. Publi
 - **Method / URL:** `POST http://localhost:3000/api/v1/auth/register`
 - **Authentication:** Not required.
 - **Headers:** `Content-Type: application/json`
-- **Purpose:** Create an active customer account. The server sets `CUSTOMER` and `ACTIVE`.
+- **Purpose:** Create an active customer account. The server sets `CUSTOMER` and `ACTIVE`, then emails a six-digit verification code. The account cannot sign in until its email is verified.
 - **Body:**
 
 ```json
@@ -56,14 +56,34 @@ The example endpoints use `http://localhost:3000`. All responses are JSON. Publi
 }
 ```
 
-- **Common errors:** `400` invalid fields, weak password, mismatch, or unexpected fields; `409` email already registered; `429` registration limit exceeded (100 attempts/hour by default in development, 5/hour in production). Override with `AUTH_REGISTER_LIMIT`.
+- **Common errors:** `400` invalid fields, weak password, mismatch, or unexpected fields; `409` email already registered; `429` registration limit exceeded (100 attempts/hour by default in development, 5/hour in production). Override with `AUTH_REGISTER_LIMIT`. `502` means the account was created but the verification message could not be delivered; retry with the resend endpoint.
+
+### Verify email with a code
+
+- **Method / URL:** `POST http://localhost:3000/api/v1/auth/verify-email`
+- **Authentication:** Not required.
+- **Headers:** `Content-Type: application/json`
+- **Body:** `{"email":"customer@example.com","code":"012345"}`
+- **Purpose:** Verify the email address using the six-digit code sent to the address. Codes expire in 10 minutes and allow up to five attempts.
+- **Success (200):** `{"success":true,"message":"Email address verified successfully"}`. Reusing the code after verification returns a successful "already verified" response.
+- **Common errors:** `400` invalid or expired code; `429` too many incorrect attempts or requests.
+
+### Resend verification email
+
+- **Method / URL:** `POST http://localhost:3000/api/v1/auth/verification-email`
+- **Authentication:** Not required.
+- **Headers:** `Content-Type: application/json`
+- **Body:** `{"email":"customer@example.com"}`
+- **Purpose:** Send another code when the email belongs to an unverified account. The response is the same when no matching account exists.
+- **Success (200):** `{"success":true,"message":"If the account exists and is not verified, a verification email has been sent"}`
+- **Common errors:** `400` invalid body; `429` more than 5 verification requests/hour; `502` SMTP is not configured or could not send the email.
 
 ### Login
 
 - **Method / URL:** `POST http://localhost:3000/api/v1/auth/login`
 - **Authentication:** Not required.
 - **Headers:** `Content-Type: application/json`
-- **Purpose:** Verify credentials and issue a JWT access token.
+- **Purpose:** Verify credentials and issue a JWT access token. Email must be verified first.
 - **Body:**
 
 ```json
@@ -95,7 +115,7 @@ The example endpoints use `http://localhost:3000`. All responses are JSON. Publi
 }
 ```
 
-- **Common errors:** `400` invalid request; `401` invalid email/password; `403` account is inactive or blocked; `429` more than 10 login attempts in 15 minutes.
+- **Common errors:** `400` invalid request; `401` invalid email/password; `403` unverified email or inactive/blocked account; `429` more than 10 login attempts in 15 minutes.
 
 ### Get current user
 
@@ -186,7 +206,7 @@ The example endpoints use `http://localhost:3000`. All responses are JSON. Publi
 Import `postman/fashion-marketplace-auth.postman_collection.json`. Set collection variable `baseUrl` to `http://localhost:3000`.
 
 1. Send **Register customer**.
-2. Send **Login**. Its test script saves `data.accessToken` in the `accessToken` collection variable.
+2. Verify the email using the six-digit code from the email, then send **Login**. Its test script saves `data.accessToken` in the `accessToken` collection variable.
 3. Send **Get current user**; the collection applies the saved Bearer token.
 4. Send **Change password** with the same current/new values in the JSON body.
 5. Send **Logout**. Clear/discard the token in Postman; this does not revoke its JWT.
@@ -199,11 +219,16 @@ Protected requests use the Postman **Authorization** tab with **Bearer Token**, 
 | Variable | Required | Description |
 | --- | --- | --- |
 | `PORT` | No | HTTP port; defaults to `3000`. |
-| `DATABASE_URL` | Yes | Connection URL for the existing MySQL `fashion_marketplace` database. |
+| `DATABASE_URL` | Yes | Connection URL for the MySQL `fashion_marketplace` database. Apply `database/migrations/20261122220000_email_verification_challenges.sql` and regenerate Prisma Client. |
 | `JWT_ACCESS_SECRET` | Yes | Random secret of at least 32 characters; generate with the command above. |
 | `JWT_ACCESS_EXPIRES_IN` | No | Access-token lifetime in `s`, `m`, `h`, or `d`; defaults to `15m`. |
 | `BCRYPT_ROUNDS` | No | bcrypt cost from 10 through 14; defaults to `12`. |
 | `CORS_ORIGINS` | No | Comma-separated allowed browser origins; defaults to local development origins. |
 | `NODE_ENV` | No | `development`, `test`, or `production`. |
+| `SMTP_HOST` | For email | SMTP server hostname. |
+| `SMTP_PORT` | No | SMTP server port; defaults to `587`. |
+| `SMTP_SECURE` | No | `true` for implicit TLS, otherwise `false`. |
+| `SMTP_USER` / `SMTP_PASSWORD` | No | SMTP credentials; configure both or neither. |
+| `SMTP_FROM` | For email | Sender address/name, e.g. `Fashion Marketplace <no-reply@example.com>`. |
 
 No refresh tokens are implemented. Adding hashed refresh-token rotation, revocation, or server-side access-token revocation requires a separately approved schema migration/table; this module does not change the existing database schema.

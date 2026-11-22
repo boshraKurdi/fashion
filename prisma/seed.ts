@@ -1,4 +1,5 @@
 import "dotenv/config";
+import bcrypt from "bcrypt";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import {
   Prisma,
@@ -63,22 +64,27 @@ async function upsertUser(input: {
   role: UserRole;
   status: UserStatus;
 }) {
+  const emailVerifiedAt = new Date();
+  const password = await bcrypt.hash(input.password, 12);
+
   return prisma.user.upsert({
     where: { email: input.email },
     update: {
       name: input.name,
       phone: input.phone ?? null,
-      password: input.password,
+      password,
       role: input.role,
       status: input.status,
+      email_verified_at: emailVerifiedAt,
     },
     create: {
       name: input.name,
       email: input.email,
       phone: input.phone ?? null,
-      password: input.password,
+      password,
       role: input.role,
       status: input.status,
+      email_verified_at: emailVerifiedAt,
     },
   });
 }
@@ -184,6 +190,8 @@ async function upsertShop(input: {
         phone: input.phone ?? existing.phone,
         email: input.email ?? existing.email,
         status: input.status,
+        rejection_reason: null,
+        approved_at: input.status === ShopStatus.APPROVED ? existing.approved_at ?? new Date() : null,
       },
     });
   }
@@ -198,6 +206,7 @@ async function upsertShop(input: {
       phone: input.phone ?? null,
       email: input.email ?? null,
       status: input.status,
+      approved_at: input.status === ShopStatus.APPROVED ? new Date() : null,
     },
   });
 }
@@ -321,7 +330,7 @@ async function upsertImage(productName: string, shopName: string, ownerEmail: st
   });
 
   if (!product) {
-    throw new Error(`Product not found: ${productName}`);
+    throw new Error(`Product not found: ${input.productName}`);
   }
 
   return prisma.productImage.create({
@@ -520,6 +529,7 @@ async function main() {
     { name: "Admin User", email: "admin@fashionmarket.test", password: "AdminPass1!", role: UserRole.ADMIN, status: UserStatus.ACTIVE },
     { name: "Omar Shop Owner", email: "omar@fashionmarket.test", password: "ShopPass1!", role: UserRole.SHOP_OWNER, status: UserStatus.ACTIVE },
     { name: "Lina Shop Owner", email: "lina@fashionmarket.test", password: "ShopPass1!", role: UserRole.SHOP_OWNER, status: UserStatus.ACTIVE },
+    { name: "Pending Shop Owner", email: "pending@fashionmarket.test", password: "ShopPass1!", role: UserRole.SHOP_OWNER, status: UserStatus.ACTIVE },
     { name: "Noura Customer", email: "noura@fashionmarket.test", password: "CustomerPass1!", role: UserRole.CUSTOMER, status: UserStatus.ACTIVE },
     { name: "Salem Customer", email: "salem@fashionmarket.test", password: "CustomerPass1!", role: UserRole.CUSTOMER, status: UserStatus.ACTIVE },
   ] as const;
@@ -603,6 +613,14 @@ async function main() {
       phone: "+966500445566",
       email: "hello@veloura.test",
       status: ShopStatus.APPROVED,
+    },
+    {
+      ownerEmail: "pending@fashionmarket.test",
+      name: "Pending Atelier",
+      description: "Seed shop used to test admin approval and rejection.",
+      phone: "+966500778899",
+      email: "pending@fashionmarket.test",
+      status: ShopStatus.PENDING,
     },
   ] as const;
 

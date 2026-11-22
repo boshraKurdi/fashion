@@ -10,6 +10,8 @@ import {
   meController,
   ownerExampleController,
   registerController,
+  resendVerificationEmailController,
+  verifyEmailController,
 } from "./auth.controller.js";
 
 export const authRouter = Router();
@@ -30,7 +32,25 @@ const registerLimiter = rateLimit({
   message: { success: false, message: "Too many registration attempts. Try again later." },
 });
 
+const verificationEmailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { success: false, message: "Too many verification email requests. Try again later." },
+});
+
+const verifyEmailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { success: false, message: "Too many verification attempts. Try again later." },
+});
+
 authRouter.post("/register", registerLimiter, registerController);
+authRouter.post("/verification-email", verificationEmailLimiter, resendVerificationEmailController);
+authRouter.post("/verify-email", verifyEmailLimiter, verifyEmailController);
 authRouter.post("/login", loginLimiter, loginController);
 authRouter.get("/me", authenticate, meController);
 authRouter.post("/logout", authenticate, logoutController);

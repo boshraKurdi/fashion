@@ -24,6 +24,36 @@ const environmentSchema = z.object({
     .min(1)
     .max(10000)
     .default(process.env.NODE_ENV === "production" ? 5 : 100),
+  SMTP_HOST: z.string().trim().min(1).optional(),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+  SMTP_SECURE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  SMTP_USER: z.string().trim().min(1).optional(),
+  SMTP_PASSWORD: z.string().min(1).optional(),
+  SMTP_FROM: z.string().trim().min(1).optional(),
+}).superRefine((value, context) => {
+  if (value.SMTP_HOST && !value.SMTP_FROM) {
+    context.addIssue({
+      code: "custom",
+      path: ["SMTP_FROM"],
+      message: "SMTP_FROM is required when SMTP_HOST is configured",
+    });
+  }
+
+  if (!value.SMTP_HOST && (value.SMTP_USER || value.SMTP_PASSWORD || value.SMTP_FROM)) {
+    context.addIssue({
+      code: "custom",
+      path: ["SMTP_HOST"],
+      message: "SMTP_HOST is required when SMTP settings are configured",
+    });
+  }
+
+  if (Boolean(value.SMTP_USER) !== Boolean(value.SMTP_PASSWORD)) {
+    context.addIssue({
+      code: "custom",
+      path: ["SMTP_PASSWORD"],
+      message: "SMTP_USER and SMTP_PASSWORD must be configured together",
+    });
+  }
 });
 
 const parsedEnvironment = environmentSchema.safeParse(process.env);

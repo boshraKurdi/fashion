@@ -1,10 +1,20 @@
 import type { RequestHandler } from "express";
 import { z } from "zod";
-import { AppError, changePassword, getSafeUser, login, register } from "./auth.service.js";
+import {
+  AppError,
+  changePassword,
+  getSafeUser,
+  login,
+  register,
+  resendVerificationEmail,
+  verifyEmail,
+} from "./auth.service.js";
 import {
   changePasswordSchema,
   loginSchema,
   registerSchema,
+  verificationEmailSchema,
+  verifyEmailSchema,
 } from "./auth.validation.js";
 
 function parseBody<T extends z.ZodType>(schema: T, body: unknown): z.infer<T> {
@@ -23,6 +33,23 @@ export const registerController: RequestHandler = async (req, res) => {
     success: true,
     message: "Account created successfully",
     data: { user: getSafeUser(user) },
+  });
+};
+
+export const resendVerificationEmailController: RequestHandler = async (req, res) => {
+  const { email } = parseBody(verificationEmailSchema, req.body);
+  await resendVerificationEmail(email);
+  res.status(200).json({
+    success: true,
+    message: "If the account exists and is not verified, a verification email has been sent",
+  });
+};
+
+export const verifyEmailController: RequestHandler = async (req, res) => {
+  const result = await verifyEmail(parseBody(verifyEmailSchema, req.body));
+  res.status(200).json({
+    success: true,
+    message: result.alreadyVerified ? "Email address was already verified" : "Email address verified successfully",
   });
 };
 
