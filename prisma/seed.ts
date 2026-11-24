@@ -330,17 +330,28 @@ async function upsertImage(productName: string, shopName: string, ownerEmail: st
   });
 
   if (!product) {
-    throw new Error(`Product not found: ${input.productName}`);
+    throw new Error(`Product not found: ${productName}`);
   }
 
-  return prisma.productImage.create({
-    data: {
-      product_id: product.id,
-      image,
-      is_primary: isPrimary,
-      sort_order: sortOrder,
-    },
+  const existingImage = await prisma.productImage.findFirst({
+    where: { product_id: product.id, sort_order: sortOrder },
+    select: { id: true },
   });
+  const data = {
+    product_id: product.id,
+    image,
+    is_primary: isPrimary,
+    sort_order: sortOrder,
+  };
+
+  if (existingImage) {
+    return prisma.productImage.update({
+      where: { id: existingImage.id },
+      data,
+    });
+  }
+
+  return prisma.productImage.create({ data });
 }
 
 async function upsertVariant(input: {
@@ -598,7 +609,7 @@ async function main() {
       ownerEmail: "omar@fashionmarket.test",
       name: "Aurelia Studio",
       description: "Modern luxury fashion for everyday elegance.",
-      logo: "https://example.com/shops/aurelia-logo.png",
+      logo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
       coverImage: "https://example.com/shops/aurelia-cover.jpg",
       phone: "+966500112233",
       email: "hello@aurelia.test",
@@ -608,7 +619,7 @@ async function main() {
       ownerEmail: "lina@fashionmarket.test",
       name: "Veloura House",
       description: "Streetwear essentials designed for movement.",
-      logo: "https://example.com/shops/veloura-logo.png",
+      logo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
       coverImage: "https://example.com/shops/veloura-cover.jpg",
       phone: "+966500445566",
       email: "hello@veloura.test",
@@ -722,12 +733,12 @@ async function main() {
   }
 
   const productImages = [
-    { shopName: "Aurelia Studio", ownerEmail: "omar@fashionmarket.test", productName: "Silk Evening Dress", image: "https://example.com/products/dress-1.jpg", primary: true, sortOrder: 1 },
-    { shopName: "Aurelia Studio", ownerEmail: "omar@fashionmarket.test", productName: "Silk Evening Dress", image: "https://example.com/products/dress-2.jpg", primary: false, sortOrder: 2 },
-    { shopName: "Aurelia Studio", ownerEmail: "omar@fashionmarket.test", productName: "Structured Blazer", image: "https://example.com/products/blazer-1.jpg", primary: true, sortOrder: 1 },
-    { shopName: "Veloura House", ownerEmail: "lina@fashionmarket.test", productName: "City Core Hoodie", image: "https://example.com/products/hoodie-1.jpg", primary: true, sortOrder: 1 },
-    { shopName: "Veloura House", ownerEmail: "lina@fashionmarket.test", productName: "Everyday Runner", image: "https://example.com/products/runner-1.jpg", primary: true, sortOrder: 1 },
-    { shopName: "Aurelia Studio", ownerEmail: "omar@fashionmarket.test", productName: "Classic Leather Tote", image: "https://example.com/products/tote-1.jpg", primary: true, sortOrder: 1 },
+    { shopName: "Aurelia Studio", ownerEmail: "omar@fashionmarket.test", productName: "Silk Evening Dress", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80", primary: true, sortOrder: 1 },
+    { shopName: "Aurelia Studio", ownerEmail: "omar@fashionmarket.test", productName: "Silk Evening Dress", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80", primary: false, sortOrder: 2 },
+    { shopName: "Aurelia Studio", ownerEmail: "omar@fashionmarket.test", productName: "Structured Blazer", image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80", primary: true, sortOrder: 1 },
+    { shopName: "Veloura House", ownerEmail: "lina@fashionmarket.test", productName: "City Core Hoodie", image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80", primary: true, sortOrder: 1 },
+    { shopName: "Veloura House", ownerEmail: "lina@fashionmarket.test", productName: "Everyday Runner", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80", primary: true, sortOrder: 1 },
+    { shopName: "Aurelia Studio", ownerEmail: "omar@fashionmarket.test", productName: "Classic Leather Tote", image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80", primary: true, sortOrder: 1 },
   ] as const;
 
   for (const item of productImages) {
@@ -891,7 +902,7 @@ async function main() {
           order_id: order.id,
           product_id: (await prisma.product.findFirst({ where: { name: "Silk Evening Dress", shop_id: shopForOrders.id }, select: { id: true } }))?.id,
           product_name: "Silk Evening Dress",
-          product_image: "https://example.com/products/dress-1.jpg",
+          product_image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
           variant_description: "Black / S",
           quantity: 1,
           unit_price: money(420),
@@ -941,7 +952,7 @@ async function main() {
           order_id: order.id,
           product_id: (await prisma.product.findFirst({ where: { name: "City Core Hoodie", shop_id: velouraShop.id }, select: { id: true } }))?.id,
           product_name: "City Core Hoodie",
-          product_image: "https://example.com/products/hoodie-1.jpg",
+          product_image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80",
           variant_description: "Black / M",
           quantity: 1,
           unit_price: money(250),

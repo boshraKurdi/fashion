@@ -16,8 +16,10 @@ none, shop-specific endpoints return `404`; if it has multiple, they return
 there is no shop. No endpoint accepts `owner_id` or `shop_id` as proof of
 ownership. IDs in JSON bodies are decimal strings.
 
-Images are stored as caller-provided paths. There is no upload provider in this
-project; upload integration is future work.
+Product and offer images are still provided as caller-supplied paths. Shop
+application logos and cover images can be uploaded from the device through the
+`POST /api/v1/auth/shop-request` multipart endpoint; they are stored locally
+under `uploads/shops`.
 
 ## Response conventions
 
@@ -108,10 +110,15 @@ products/offers; profile edits and order fulfillment remain available.
   "phone": "+1 555 0100",
   "email": "shop@example.com",
   "logo": "/uploads/atelier-logo.jpg",
-  "coverImage": "/uploads/atelier-cover.jpg"
+  "coverImage": "/uploads/atelier-cover.jpg",
+  "facebookUrl": "https://facebook.com/atelier-north",
+  "instagramUrl": "https://instagram.com/atelier-north",
+  "whatsappUrl": "https://wa.me/15550100"
 }
 ```
 
+- Social account fields are optional HTTP(S) URLs and can also be updated
+  individually. Local `/uploads/` image paths are returned as absolute URLs.
 - **Success:** `200`, standard success envelope with updated shop details.
 - **Errors:** `400` invalid or empty body, `401`, `403`, `404`, `409`, `500`.
   Owner ID, approval status, rejection reason, and approval date cannot be

@@ -13,8 +13,8 @@ const environmentSchema = z.object({
     .min(32, "JWT_ACCESS_SECRET must contain at least 32 characters"),
   JWT_ACCESS_EXPIRES_IN: z
     .string()
-    .regex(/^\d+[smhd]$/, "JWT_ACCESS_EXPIRES_IN must use s, m, h, or d (e.g. 15m)")
-    .default("15m"),
+    .regex(/^\d+[smhd]$/, "JWT_ACCESS_EXPIRES_IN must use s, m, h, or d (e.g. 30d)")
+    .default("30d"),
   BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(14).default(12),
   CORS_ORIGINS: z.string().default("http://localhost:3000,http://localhost:5173"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),

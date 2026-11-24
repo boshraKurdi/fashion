@@ -5,11 +5,30 @@ import {
   orderStatusSchema,
   productCreateSchema,
   productListQuerySchema,
+  shopRequestSchema,
   shopUpdateSchema,
 } from "./shop-owner.validation.js";
 
+test("shop requests require a name and reject ownership or approval fields", () => {
+  const valid = { name: "Atelier North", phone: "+966500000000" };
+  assert.equal(shopRequestSchema.safeParse(valid).success, true);
+  assert.equal(shopRequestSchema.safeParse({
+    ...valid,
+    facebookUrl: "https://facebook.com/atelier-north",
+    instagramUrl: "https://instagram.com/atelier-north",
+    whatsappUrl: "https://wa.me/966500000000",
+  }).success, true);
+  assert.equal(shopRequestSchema.safeParse({ phone: "+966500000000" }).success, false);
+  assert.equal(shopRequestSchema.safeParse({ ...valid, ownerId: "2" }).success, false);
+  assert.equal(shopRequestSchema.safeParse({ ...valid, status: "APPROVED" }).success, false);
+  assert.equal(shopRequestSchema.safeParse({ ...valid, email: "not-an-email" }).success, false);
+  assert.equal(shopRequestSchema.safeParse({ ...valid, instagramUrl: "javascript:alert(1)" }).success, false);
+  assert.equal(shopRequestSchema.safeParse({ ...valid, logo: "/uploads/logo.png" }).success, false);
+});
+
 test("shop profile updates reject admin-controlled and ownership fields", () => {
   assert.equal(shopUpdateSchema.safeParse({ name: "Updated shop" }).success, true);
+  assert.equal(shopUpdateSchema.safeParse({ whatsappUrl: "https://wa.me/15550100" }).success, true);
   assert.equal(shopUpdateSchema.safeParse({ owner_id: "99" }).success, false);
   assert.equal(shopUpdateSchema.safeParse({ status: "APPROVED" }).success, false);
 });

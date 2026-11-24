@@ -2,6 +2,9 @@ import { z } from "zod";
 
 const id = z.string().regex(/^[1-9]\d*$/, "Must be a positive ID");
 const nullableText = (max: number) => z.string().trim().max(max).nullable();
+const nullableSocialUrl = z.string().trim().max(500).url()
+  .refine((value) => /^https?:\/\//i.test(value), "Must use HTTP or HTTPS")
+  .nullable();
 const pagination = {
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
@@ -15,7 +18,20 @@ export const shopUpdateSchema = z.object({
   email: z.string().trim().email().max(190).nullable().optional(),
   logo: nullableText(500).optional(),
   coverImage: nullableText(500).optional(),
+  facebookUrl: nullableSocialUrl.optional(),
+  instagramUrl: nullableSocialUrl.optional(),
+  whatsappUrl: nullableSocialUrl.optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, "Provide at least one field to update");
+
+export const shopRequestSchema = z.object({
+  name: z.string().trim().min(1).max(180),
+  description: nullableText(65535).optional(),
+  phone: nullableText(30).optional(),
+  email: z.string().trim().email().max(190).nullable().optional(),
+  facebookUrl: nullableSocialUrl.optional(),
+  instagramUrl: nullableSocialUrl.optional(),
+  whatsappUrl: nullableSocialUrl.optional(),
+}).strict();
 
 const variantInput = z.object({
   colorId: id.nullable().optional(),

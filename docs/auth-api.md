@@ -110,7 +110,7 @@ The example endpoints use `http://localhost:3000`. All responses are JSON. Publi
     },
     "accessToken": "<JWT returned by this request>",
     "tokenType": "Bearer",
-    "expiresIn": "15m"
+    "expiresIn": "30d"
   }
 }
 ```
@@ -221,7 +221,7 @@ Protected requests use the Postman **Authorization** tab with **Bearer Token**, 
 | `PORT` | No | HTTP port; defaults to `3000`. |
 | `DATABASE_URL` | Yes | Connection URL for the MySQL `fashion_marketplace` database. Apply `database/migrations/20261122220000_email_verification_challenges.sql` and regenerate Prisma Client. |
 | `JWT_ACCESS_SECRET` | Yes | Random secret of at least 32 characters; generate with the command above. |
-| `JWT_ACCESS_EXPIRES_IN` | No | Access-token lifetime in `s`, `m`, `h`, or `d`; defaults to `15m`. |
+| `JWT_ACCESS_EXPIRES_IN` | No | Access-token lifetime in `s`, `m`, `h`, or `d`; defaults to `30d` (30 days). |
 | `BCRYPT_ROUNDS` | No | bcrypt cost from 10 through 14; defaults to `12`. |
 | `CORS_ORIGINS` | No | Comma-separated allowed browser origins; defaults to local development origins. |
 | `NODE_ENV` | No | `development`, `test`, or `production`. |

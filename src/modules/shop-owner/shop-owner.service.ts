@@ -2,6 +2,18 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../config/database.js";
 import { AppError } from "../auth/auth.service.js";
 
+type ShopRequestInput = {
+  name: string;
+  description?: string | null | undefined;
+  phone?: string | null | undefined;
+  email?: string | null | undefined;
+  logo?: string | null | undefined;
+  coverImage?: string | null | undefined;
+  facebookUrl?: string | null | undefined;
+  instagramUrl?: string | null | undefined;
+  whatsappUrl?: string | null | undefined;
+};
+
 const productDetail = {
   category: { select: { id: true, name: true, slug: true } },
   brand: { select: { id: true, name: true } },
@@ -43,6 +55,61 @@ export async function getOwnedShop(ownerId: string, allowMissing = false) {
     throw new AppError("Shop not found for this owner", 404);
   }
   return shop ?? null;
+}
+
+export async function createShopRequest(ownerId: string, input: ShopRequestInput) {
+  const ownerIdBigInt = BigInt(ownerId);
+  const owner = await prisma.user.findUnique({
+    where: { id: ownerIdBigInt },
+    select: { role: true, email_verified_at: true },
+  });
+
+  if (!owner || !owner.email_verified_at) {
+    throw new AppError("A verified account is required to request a shop", 403);
+  }
+  if (owner.role === "ADMIN") {
+    throw new AppError("Administrators cannot request a shop", 403);
+  }
+
+  const shops = await prisma.shop.findMany({
+    where: { owner_id: ownerIdBigInt },
+    orderBy: [{ created_at: "asc" }, { id: "asc" }],
+    take: 2,
+  });
+  if (shops.length > 1) {
+    throw new AppError("This account already has multiple shops", 409);
+  }
+
+  const existingShop = shops[0];
+  if (existingShop && existingShop.status !== "REJECTED") {
+    throw new AppError("A shop request already exists for this account", 409);
+  }
+
+  const data = {
+    name: input.name,
+    description: input.description ?? null,
+    phone: input.phone ?? null,
+    email: input.email ?? null,
+    facebook_url: input.facebookUrl ?? null,
+    instagram_url: input.instagramUrl ?? null,
+    whatsapp_url: input.whatsappUrl ?? null,
+    logo: input.logo ?? null,
+    cover_image: input.coverImage ?? null,
+    status: "PENDING" as const,
+    rejection_reason: null,
+    approved_at: null,
+  };
+
+  if (existingShop) {
+    return prisma.shop.update({
+      where: { id: existingShop.id },
+      data,
+    });
+  }
+
+  return prisma.shop.create({
+    data: { owner_id: ownerIdBigInt, ...data },
+  });
 }
 
 function assertCanPublish(shopStatus: string): void {
@@ -143,6 +210,7 @@ export async function getDashboard(ownerId: string) {
     shop: {
       id: shop.id, name: shop.name, description: shop.description, logo: shop.logo,
       cover_image: shop.cover_image, phone: shop.phone, email: shop.email, status: shop.status,
+      facebook_url: shop.facebook_url, instagram_url: shop.instagram_url, whatsapp_url: shop.whatsapp_url,
       rejection_reason: shop.rejection_reason, approved_at: shop.approved_at, created_at: shop.created_at,
     },
     statistics: {
@@ -169,6 +237,7 @@ export async function getDashboard(ownerId: string) {
 export async function updateShop(ownerId: string, input: {
   name?: string | undefined; description?: string | null | undefined; phone?: string | null | undefined; email?: string | null | undefined;
   logo?: string | null | undefined; coverImage?: string | null | undefined;
+  facebookUrl?: string | null | undefined; instagramUrl?: string | null | undefined; whatsappUrl?: string | null | undefined;
 }) {
   const shop = await getOwnedShop(ownerId);
   const updated = await prisma.shop.update({
@@ -180,6 +249,9 @@ export async function updateShop(ownerId: string, input: {
       ...(input.email !== undefined ? { email: input.email } : {}),
       ...(input.logo !== undefined ? { logo: input.logo } : {}),
       ...(input.coverImage !== undefined ? { cover_image: input.coverImage } : {}),
+      ...(input.facebookUrl !== undefined ? { facebook_url: input.facebookUrl } : {}),
+      ...(input.instagramUrl !== undefined ? { instagram_url: input.instagramUrl } : {}),
+      ...(input.whatsappUrl !== undefined ? { whatsapp_url: input.whatsappUrl } : {}),
     },
   });
   return updated;

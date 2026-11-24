@@ -6,6 +6,7 @@ import { prisma } from "./config/database.js";
 import { authenticate } from "./middlewares/auth.middleware.js";
 import { authorizeRoles } from "./middlewares/role.middleware.js";
 import { AppError } from "./modules/auth/auth.service.js";
+import { withDefaultProductImages } from "./modules/products/product-images.js";
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 100;
@@ -60,6 +61,9 @@ const publicShopSelect = {
   description: true,
   logo: true,
   cover_image: true,
+  facebook_url: true,
+  instagram_url: true,
+  whatsapp_url: true,
   status: true,
   created_at: true,
   approved_at: true,
@@ -75,7 +79,7 @@ const topProductSelect = {
   created_at: true,
   category: { select: { id: true, name: true, slug: true } },
   brand: { select: { id: true, name: true } },
-  shop: { select: { id: true, name: true, logo: true, status: true } },
+  shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true, status: true } },
   images: { orderBy: [{ sort_order: "asc" }, { id: "asc" }], select: { id: true, image: true, is_primary: true, sort_order: true } },
   variants: { orderBy: [{ id: "asc" }], select: { id: true, price: true, sale_price: true, sku: true, color: { select: { id: true, name: true, hex_code: true } }, size: { select: { id: true, name: true, type: true } } } },
 } satisfies Prisma.ProductSelect;
@@ -181,6 +185,13 @@ async function getActiveOfferProductsForProduct(productId: bigint) {
 
 const marketplaceRouter = Router();
 
+marketplaceRouter.get("/product-placeholder.svg", (_req, res) => {
+  res
+    .type("image/svg+xml")
+    .set("Cache-Control", "public, max-age=86400")
+    .send('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Product image unavailable"><rect width="600" height="600" fill="#f3f0eb"/><path d="m215 160 55-30h60l55 30 55 65-48 38-28-30v205H236V233l-28 30-48-38z" fill="#d8d1c7"/><path d="m270 130 30 40 30-40" fill="none" stroke="#b8aea1" stroke-width="12" stroke-linejoin="round"/><text x="300" y="500" fill="#756d63" font-family="Arial,sans-serif" font-size="24" text-anchor="middle">No product image</text></svg>');
+});
+
 marketplaceRouter.get("/home", async (_req, res) => {
   const [categories, featuredProducts, newArrivals, onSaleProducts, featuredShops, activeOffers, brands] = await Promise.all([
     prisma.category.findMany({
@@ -229,7 +240,7 @@ marketplaceRouter.get("/home", async (_req, res) => {
         discount_value: true,
         start_at: true,
         end_at: true,
-        shop: { select: { id: true, name: true, logo: true } },
+        shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } },
       },
     }),
     prisma.brand.findMany({
@@ -316,7 +327,7 @@ marketplaceRouter.get("/home/active-offers", async (_req, res) => {
       discount_value: true,
       start_at: true,
       end_at: true,
-      shop: { select: { id: true, name: true, logo: true } },
+      shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } },
     },
   });
 
@@ -437,7 +448,13 @@ marketplaceRouter.get("/products", async (req, res) => {
     prisma.product.count({ where }),
   ]);
 
-  sendPaginated(res, products, page, limit, total);
+  const host = req.get("host");
+  if (!host) {
+    throw new AppError("Could not determine API host for the default product image", 500);
+  }
+  const defaultImageUrl = new URL("/api/v1/product-placeholder.svg", `${req.protocol}://${host}`).toString();
+
+  sendPaginated(res, withDefaultProductImages(products, defaultImageUrl), page, limit, total);
 });
 
 marketplaceRouter.get("/products/:id", async (req, res) => {
@@ -757,7 +774,7 @@ marketplaceRouter.get("/users/me/reviews", authenticate, async (req, res) => {
   const reviews = await prisma.shopReview.findMany({
     where: { user_id: BigInt(req.authUser.id) },
     orderBy: [{ created_at: "desc" }, { id: "desc" }],
-    select: { id: true, rating: true, comment: true, status: true, created_at: true, shop: { select: { id: true, name: true, logo: true } } },
+    select: { id: true, rating: true, comment: true, status: true, created_at: true, shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } } },
   });
 
   res.status(200).json({ success: true, message: "Your reviews retrieved successfully", data: reviews });
@@ -776,7 +793,7 @@ marketplaceRouter.get("/offers", async (_req, res) => {
       discount_value: true,
       start_at: true,
       end_at: true,
-      shop: { select: { id: true, name: true, logo: true } },
+      shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } },
     },
   });
 
@@ -796,7 +813,7 @@ marketplaceRouter.get("/offers/:id", async (req, res) => {
       discount_value: true,
       start_at: true,
       end_at: true,
-      shop: { select: { id: true, name: true, logo: true } },
+      shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } },
       offerProducts: { select: { product: { select: topProductSelect } } },
     },
   });

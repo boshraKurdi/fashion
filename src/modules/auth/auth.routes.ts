@@ -3,6 +3,8 @@ import { rateLimit } from "express-rate-limit";
 import { env } from "../../config/env.js";
 import { authenticate } from "../../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../../middlewares/role.middleware.js";
+import { shopImageUploadMiddleware } from "../../middlewares/shop-image-upload.middleware.js";
+import { createShopRequestController } from "../shop-owner/shop-owner.controller.js";
 import {
   changePasswordController,
   loginController,
@@ -55,6 +57,13 @@ authRouter.post("/login", loginLimiter, loginController);
 authRouter.get("/me", authenticate, meController);
 authRouter.post("/logout", authenticate, logoutController);
 authRouter.patch("/change-password", authenticate, changePasswordController);
+authRouter.post(
+  "/shop-request",
+  authenticate,
+  authorizeRoles("CUSTOMER", "SHOP_OWNER"),
+  shopImageUploadMiddleware,
+  createShopRequestController,
+);
 authRouter.get(
   "/owner-example",
   authenticate,

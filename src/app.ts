@@ -2,11 +2,13 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import { corsOrigins, env } from "./config/env.js";
+import { uploadDirectory } from "./middlewares/shop-image-upload.middleware.js";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { adminRouter } from "./modules/admin/admin.routes.js";
 import { shopOwnerRouter } from "./modules/shop-owner/shop-owner.routes.js";
 import { marketplaceRouter } from "./marketplace.routes.js";
+import { makeUploadsAbsolute } from "./services/upload-url.js";
 
 function normalizeJsonValue(value: unknown): unknown {
   if (typeof value === "bigint") {
@@ -40,7 +42,13 @@ export const app = express();
 app.disable("x-powered-by");
 app.use((req, res, next) => {
   const originalJson = res.json.bind(res);
-  res.json = ((body: unknown) => originalJson(normalizeJsonValue(body))) as typeof res.json;
+  res.json = ((body: unknown) => {
+    const host = req.get("host");
+    const normalized = normalizeJsonValue(body);
+    return originalJson(host
+      ? makeUploadsAbsolute(normalized, `${req.protocol}://${host}`)
+      : normalized);
+  }) as typeof res.json;
   next();
 });
 app.use(helmet());
@@ -56,6 +64,7 @@ app.use(
     },
   }),
 );
+app.use("/uploads", express.static(uploadDirectory, { dotfiles: "deny", index: false, maxAge: "1d" }));
 app.use(express.json({ limit: "10kb" }));
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/admin", adminRouter);

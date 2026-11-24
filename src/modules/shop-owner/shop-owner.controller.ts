@@ -1,11 +1,12 @@
 import type { Request, RequestHandler } from "express";
 import { z } from "zod";
+import { removeShopImageUploads } from "../../middlewares/shop-image-upload.middleware.js";
 import { AppError } from "../auth/auth.service.js";
 import {
   branchCreateSchema, branchStatusSchema, branchUpdateSchema, imageCreateSchema, imageUpdateSchema,
   offerCreateSchema, offerListQuerySchema, offerStatusSchema, offerUpdateSchema, orderListQuerySchema,
   orderStatusSchema, pathIdSchema, productCreateSchema, productListQuerySchema, productStatusSchema,
-  productUpdateSchema, reviewListQuerySchema, shopUpdateSchema, subscriptionHistoryQuerySchema,
+  productUpdateSchema, reviewListQuerySchema, shopRequestSchema, shopUpdateSchema, subscriptionHistoryQuerySchema,
   subscriptionRequestSchema, variantCreateSchema, variantUpdateSchema,
 } from "./shop-owner.validation.js";
 import * as service from "./shop-owner.service.js";
@@ -47,6 +48,30 @@ export const updateShopController: RequestHandler = async (req, res) => {
   const data = await service.updateShop(getOwnerId(req), parse(shopUpdateSchema, req.body));
   const { owner_id: _ownerId, ...shop } = data;
   res.status(200).json({ success: true, message: "Shop updated successfully", data: shop });
+};
+
+export const createShopRequestController: RequestHandler = async (req, res) => {
+  const files = req.files && !Array.isArray(req.files) ? Object.values(req.files).flat() : [];
+  try {
+    const input = parse(shopRequestSchema, req.body);
+    const uploaded = req.files && !Array.isArray(req.files) ? req.files : {};
+    const logo = uploaded.logo?.[0];
+    const coverImage = uploaded.coverImage?.[0];
+    const data = await service.createShopRequest(getOwnerId(req), {
+      ...input,
+      ...(logo ? { logo: `/uploads/shops/${logo.filename}` } : {}),
+      ...(coverImage ? { coverImage: `/uploads/shops/${coverImage.filename}` } : {}),
+    });
+    const { owner_id: _ownerId, ...shop } = data;
+    res.status(201).json({
+      success: true,
+      message: "Shop request submitted successfully",
+      data: shop,
+    });
+  } catch (error) {
+    await removeShopImageUploads(files);
+    throw error;
+  }
 };
 
 export const listProductsController: RequestHandler = async (req, res) => {

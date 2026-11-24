@@ -45,6 +45,55 @@ npx prisma db execute --file database/migrations/20261122220000_email_verificati
 npx prisma generate
 ```
 
+## Request a shop
+
+- **POST** `http://localhost:3000/api/v1/auth/shop-request`
+- Requires a valid JWT for a verified `CUSTOMER` or `SHOP_OWNER`.
+- Send as `multipart/form-data`:
+
+| Field | Type | Required |
+| --- | --- | --- |
+| `name` | Text | Yes |
+| `description` | Text | No |
+| `phone` | Text | No |
+| `email` | Text | No |
+| `facebookUrl` | Text URL | No |
+| `instagramUrl` | Text URL | No |
+| `whatsappUrl` | Text URL | No |
+| `logo` | File | No |
+| `coverImage` | File | No |
+
+The logo and cover image are uploaded from the client device. JPEG, PNG, and
+WebP files up to 5 MB each are accepted and saved under `uploads/shops` with
+generated filenames. The API returns their public paths, for example
+`https://api.example.com/uploads/shops/<generated-name>.jpg`. All API responses
+expand local `/uploads/` paths using the request's public protocol and host.
+Keep the `uploads` directory persistent and writable by the application; back
+it up with the database.
+
+The social fields must be complete HTTP(S) profile URLs, for example
+`https://facebook.com/your-shop`, `https://instagram.com/your-shop`, and
+`https://wa.me/966500000000`. Apply the database migration before using these
+fields:
+
+```powershell
+npx prisma db execute --file database/migrations/20261124173000_add_shop_social_links.sql --schema prisma/schema.prisma
+npx prisma generate
+```
+
+The authenticated user's ID becomes the shop owner; do not send an owner ID or
+approval status. The shop is created with `PENDING` status and must be approved
+by an administrator before it can publish products. After approval, the
+account's role becomes `SHOP_OWNER`. A rejected application can be resubmitted
+using this endpoint, which updates the rejected shop and sets it back to
+`PENDING`. Other existing shop states return `409`.
+
+- **Success:** `201`, with the pending shop in `data`.
+- **Errors:** `400` invalid body, `401` missing/invalid token, `403` wrong role
+  or unverified account, `409` a non-rejected shop already exists. Invalid
+  image types, files larger than 5 MB, or duplicate/unknown file fields return
+  `400`.
+
 ## Shop review
 
 All endpoints below require a JWT for a user with the `ADMIN` role.
