@@ -185,6 +185,24 @@ async function getActiveOfferProductsForProduct(productId: bigint) {
 
 const marketplaceRouter = Router();
 
+marketplaceRouter.get("/payment-methods", async (_req, res) => {
+  const accounts = await prisma.paymentAccount.findMany({
+    where: { status: 1 },
+    orderBy: [{ sort_order: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      method_name: true,
+      provider_name: true,
+      account_name: true,
+      account_number: true,
+      payment_code: true,
+      qr_image: true,
+      instructions: true,
+    },
+  });
+  res.status(200).json({ success: true, data: accounts });
+});
+
 marketplaceRouter.get("/product-placeholder.svg", (_req, res) => {
   res
     .type("image/svg+xml")

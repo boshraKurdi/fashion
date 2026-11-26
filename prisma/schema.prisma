@@ -130,6 +130,7 @@ model User {
   orders       Order[]
   reviews      ShopReview[]
   verification_challenge EmailVerificationChallenge?
+  reviewed_payments Payment[] @relation("PaymentReviewer")
 
   @@map("users")
 }
@@ -462,10 +463,16 @@ model Payment {
   transaction_id String?     @db.VarChar(190)
   status        PaymentStatus @default(PENDING)
   paid_at       DateTime?    @db.DateTime(0)
+  proof_image   String?      @db.VarChar(500)
+  payment_account_id BigInt? @db.UnsignedBigInt
+  reviewed_by_id BigInt?    @db.UnsignedBigInt
+  reviewed_at   DateTime?    @db.DateTime(0)
   created_at    DateTime?    @default(now()) @db.Timestamp(0)
   updated_at    DateTime?    @default(now()) @updatedAt @db.Timestamp(0)
 
   order Order @relation(fields: [order_id], references: [id])
+  payment_account PaymentAccount? @relation(fields: [payment_account_id], references: [id])
+  reviewed_by User? @relation("PaymentReviewer", fields: [reviewed_by_id], references: [id])
 
   @@map("payments")
 }
@@ -521,4 +528,41 @@ model ShopSubscription {
   plan SubscriptionPlan @relation(fields: [plan_id], references: [id])
 
   @@map("shop_subscriptions")
+}
+
+model PlatformSetting {
+  id            Int      @id @default(1)
+  platform_name String   @db.VarChar(150)
+  description   String?  @db.Text
+  logo          String?  @db.VarChar(500)
+  email         String?  @db.VarChar(190)
+  phone         String?  @db.VarChar(30)
+  support_email String?  @db.VarChar(190)
+  support_phone String?  @db.VarChar(30)
+  currency      String   @default("USD") @db.VarChar(10)
+  social_links  Json?
+  general       Json?
+  created_at    DateTime @default(now()) @db.Timestamp(0)
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamp(0)
+
+  @@map("platform_settings")
+}
+
+model PaymentAccount {
+  id             BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  method_name    String   @db.VarChar(100)
+  provider_name  String   @db.VarChar(150)
+  account_name   String   @db.VarChar(150)
+  account_number String?  @db.VarChar(190)
+  payment_code   String?  @db.VarChar(190)
+  qr_image       String?  @db.VarChar(500)
+  instructions   String?  @db.Text
+  status         Int      @default(1)
+  sort_order     Int      @default(0)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
+  updated_at     DateTime @default(now()) @updatedAt @db.Timestamp(0)
+
+  payments Payment[]
+
+  @@map("payment_accounts")
 }

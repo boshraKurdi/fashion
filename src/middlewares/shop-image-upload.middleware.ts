@@ -7,6 +7,7 @@ import { AppError } from "../modules/auth/auth.service.js";
 
 export const uploadDirectory = path.resolve(process.cwd(), "uploads");
 const shopImagesDirectory = path.join(uploadDirectory, "shops");
+export const paymentQrDirectory = path.join(uploadDirectory, "payment-accounts");
 const extensionByMimeType: Record<string, string> = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
@@ -106,3 +107,55 @@ export const shopImageUploadMiddleware: RequestHandler = (req, res, next) => {
 export async function removeShopImageUploads(files: Express.Multer.File[]): Promise<void> {
   await Promise.all(files.map((file) => rm(file.path, { force: true })));
 }
+
+const qrUpload = multer({
+  storage: multer.diskStorage({
+    destination(_req, _file, callback) {
+      mkdir(paymentQrDirectory, { recursive: true }).then(
+        () => callback(null, paymentQrDirectory),
+        (error: Error) => callback(error, paymentQrDirectory),
+      );
+    },
+    filename(_req, file, callback) {
+      callback(null, `${randomUUID()}${extensionByMimeType[file.mimetype] ?? ".bin"}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 12, fieldSize: 64 * 1024 },
+  fileFilter(_req, file, callback) {
+    if (!Object.hasOwn(extensionByMimeType, file.mimetype)) {
+      callback(new AppError("Only JPEG, PNG, and WebP images are allowed", 400));
+      return;
+    }
+    callback(null, true);
+  },
+}).single("qrImage");
+
+export const paymentQrUploadMiddleware: RequestHandler = (req, res, next) => {
+  qrUpload(req, res, (error: unknown) => {
+    if (error) {
+      if (error instanceof multer.MulterError) {
+        next(new AppError(error.code === "LIMIT_FILE_SIZE" ? "QR image must be 5 MB or smaller" : "Invalid QR image upload", 400));
+        return;
+      }
+      next(error);
+      return;
+    }
+    if (!req.file) {
+      next();
+      return;
+    }
+    void (async () => {
+      const file = req.file;
+      if (!file) {
+        next();
+        return;
+      }
+      if (!(await hasValidImageSignature(file))) {
+        await rm(file.path, { force: true });
+        next(new AppError("Uploaded file content is not a valid JPEG, PNG, or WebP image", 400));
+        return;
+      }
+      next();
+    })().catch(next);
+  });
+};

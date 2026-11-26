@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "Fashion Marketplace Admin Dashboard",
+    "description": "Complete implemented admin and public payment-method APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "adminToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Admin login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const body = pm.response.json();","if (body.success && body.data && body.data.accessToken) pm.collectionVariables.set('adminToken', body.data.accessToken);"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "noauth" }, "url": "{{baseUrl}}/api/v1/auth/login", "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPassword1!\"\n}", "options": { "raw": { "language": "json" } } } },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [{ "name": "Dashboard overview", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/dashboard" }, "response": [] }]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "List users", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/admin/users?page=1&limit=10&search=&role=&status=", "host": ["{{baseUrl}}"], "path": ["api","v1","admin","users"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }, { "key": "search", "value": "" }, { "key": "role", "value": "" }, { "key": "status", "value": "" }] } }, "response": [] },
+        { "name": "Get user", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/users/1" }, "response": [] },
+        { "name": "Update user", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/users/1", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"+20 100 000 0000\"\n}", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Set user status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/users/1/status", "body": { "mode": "raw", "raw": "{ \"status\": \"BLOCKED\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Set user role", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/users/1/role", "body": { "mode": "raw", "raw": "{ \"role\": \"SHOP_OWNER\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Delete or safely deactivate user", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/users/1" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Shops",
+      "item": [
+        { "name": "List shops", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/admin/shops?page=1&limit=10&status=PENDING&search=", "host": ["{{baseUrl}}"], "path": ["api","v1","admin","shops"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }, { "key": "status", "value": "PENDING" }, { "key": "search", "value": "" }] } }, "response": [] },
+        { "name": "Get shop", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1" }, "response": [] },
+        { "name": "Update shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/shops/1", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Shop\",\n  \"description\": \"Shop description\"\n}", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Approve shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/approve" }, "response": [] },
+        { "name": "Reject shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/reject", "body": { "mode": "raw", "raw": "{ \"rejectionReason\": \"Incomplete documents\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Suspend shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/suspend" }, "response": [] },
+        { "name": "Activate shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/activate" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        { "name": "List categories", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/categories?page=1&limit=10&search=" }, "response": [] },
+        { "name": "Get category", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/categories/1" }, "response": [] },
+        { "name": "Create category", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/categories", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Women\",\n  \"slug\": \"women\",\n  \"parentId\": null,\n  \"image\": null\n}", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Update category", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/categories/1", "body": { "mode": "raw", "raw": "{ \"name\": \"Women Fashion\", \"slug\": \"women-fashion\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Set category status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/categories/1/status", "body": { "mode": "raw", "raw": "{ \"status\": 1 }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Delete category", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/categories/1" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Brands",
+      "item": [
+        { "name": "List brands", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/brands?page=1&limit=10&search=" }, "response": [] },
+        { "name": "Get brand", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/brands/1" }, "response": [] },
+        { "name": "Create brand", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/brands", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Example Brand\",\n  \"logo\": \"/uploads/brands/example.png\"\n}", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Update brand", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/brands/1", "body": { "mode": "raw", "raw": "{ \"name\": \"Updated Brand\", \"logo\": null }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Set brand status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/brands/1/status", "body": { "mode": "raw", "raw": "{ \"status\": 1 }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Delete brand", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/brands/1" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        { "name": "List products", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/products?page=1&limit=10&search=&shopId=&categoryId=&brandId=&status=" }, "response": [] },
+        { "name": "Get product", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/products/1" }, "response": [] },
+        { "name": "Set product status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/products/1/status", "body": { "mode": "raw", "raw": "{ \"status\": \"HIDDEN\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Delete or archive product", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/products/1" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        { "name": "List orders", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/orders?page=1&limit=10&search=&shopId=&userId=&status=&paymentStatus=&startDate=&endDate=" }, "response": [] },
+        { "name": "Get order", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/orders/1" }, "response": [] },
+        { "name": "Update order status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/orders/1/status", "body": { "mode": "raw", "raw": "{ \"status\": \"PROCESSING\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Order statistics", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/orders/statistics?startDate=&endDate=" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        { "name": "List payments", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/payments?page=1&limit=10&search=&method=&status=" }, "response": [] },
+        { "name": "Get payment", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/payments/1" }, "response": [] },
+        { "name": "Payment statistics", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/payments/statistics" }, "response": [] },
+        { "name": "Approve manual payment", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/payments/1/approve", "body": { "mode": "raw", "raw": "{ \"transactionId\": \"TXN-20261126-001\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Reject manual payment", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/payments/1/reject", "body": { "mode": "raw", "raw": "{ \"transactionId\": \"TXN-INVALID-001\" }", "options": { "raw": { "language": "json" } } } }, "response": [] }
+      ]
+    },
+    {
+      "name": "Subscription Plans",
+      "item": [
+        { "name": "List plans", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/subscription-plans" }, "response": [] },
+        { "name": "Get plan", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/subscription-plans/1" }, "response": [] },
+        { "name": "Create plan", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/subscription-plans", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Monthly Plan\",\n  \"description\": \"One month subscription\",\n  \"price\": 49.99,\n  \"duration\": 1,\n  \"durationUnit\": \"MONTH\",\n  \"features\": [\"Priority listing\", \"Shop analytics\"]\n}", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Update plan", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/subscription-plans/1", "body": { "mode": "raw", "raw": "{ \"name\": \"Updated Monthly Plan\", \"price\": 59.99 }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Set plan status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/subscription-plans/1/status", "body": { "mode": "raw", "raw": "{ \"status\": 1 }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Delete plan", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/subscription-plans/1" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Shop Subscriptions",
+      "item": [
+        { "name": "List shop subscriptions", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shop-subscriptions?page=1&limit=10&status=&planId=&shopId=" }, "response": [] },
+        { "name": "Get shop subscription", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shop-subscriptions/1" }, "response": [] },
+        { "name": "Approve subscription", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shop-subscriptions/1/approve" }, "response": [] },
+        { "name": "Reject subscription", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/shop-subscriptions/1/reject", "body": { "mode": "raw", "raw": "{ \"rejectionReason\": \"Payment not verified\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Cancel subscription", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shop-subscriptions/1/cancel" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Offers",
+      "item": [
+        { "name": "List offers", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/offers?page=1&limit=10&search=&shopId=&status=" }, "response": [] },
+        { "name": "Get offer", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/offers/1" }, "response": [] },
+        { "name": "Create offer", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/offers", "body": { "mode": "raw", "raw": "{\n  \"shopId\": 1,\n  \"title\": \"Season Sale\",\n  \"description\": \"Selected products\",\n  \"discountType\": \"PERCENTAGE\",\n  \"discountValue\": 20,\n  \"startAt\": \"2026-11-26T00:00:00.000Z\",\n  \"endAt\": \"2026-12-26T00:00:00.000Z\",\n  \"productIds\": [1, 2]\n}", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Update offer", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/offers/1", "body": { "mode": "raw", "raw": "{ \"title\": \"Updated Season Sale\", \"discountValue\": 25 }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Set offer status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/offers/1/status", "body": { "mode": "raw", "raw": "{ \"status\": \"ACTIVE\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Delete offer", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/offers/1" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        { "name": "List reviews", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/reviews?page=1&limit=10&shopId=&rating=&status=" }, "response": [] },
+        { "name": "Get review", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/reviews/1" }, "response": [] },
+        { "name": "Set review status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/reviews/1/status", "body": { "mode": "raw", "raw": "{ \"status\": \"APPROVED\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Delete review", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/reviews/1" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Platform Settings",
+      "item": [
+        { "name": "Get platform settings", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/settings" }, "response": [] },
+        { "name": "Update platform settings", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/settings", "body": { "mode": "raw", "raw": "{\n  \"platformName\": \"Fashion Marketplace\",\n  \"description\": \"Fashion shopping platform\",\n  \"email\": \"support@example.com\",\n  \"phone\": \"+20 100 000 0000\",\n  \"supportEmail\": \"support@example.com\",\n  \"supportPhone\": \"+20 100 000 0000\",\n  \"currency\": \"USD\",\n  \"socialLinks\": { \"facebook\": \"https://facebook.com/example\", \"instagram\": \"https://instagram.com/example\" }\n}", "options": { "raw": { "language": "json" } } } }, "response": [] }
+      ]
+    },
+    {
+      "name": "Payment Accounts",
+      "item": [
+        { "name": "List payment accounts", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/settings/payment-accounts?page=1&limit=10" }, "response": [] },
+        { "name": "Get payment account", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/settings/payment-accounts/1" }, "response": [] },
+        { "name": "Create payment account with QR code", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/settings/payment-accounts", "body": { "mode": "formdata", "formdata": [
+          { "key": "methodName", "value": "Mobile Wallet", "type": "text" },
+          { "key": "providerName", "value": "Example Wallet", "type": "text" },
+          { "key": "accountName", "value": "Fashion Marketplace", "type": "text" },
+          { "key": "paymentCode", "value": "WALLET-12345", "type": "text" },
+          { "key": "instructions", "value": "Send the payment then submit the transaction reference.", "type": "text" },
+          { "key": "sortOrder", "value": "1", "type": "text" },
+          { "key": "status", "value": "ACTIVE", "type": "text" },
+          { "key": "qrImage", "type": "file", "src": "" }
+        ] } }, "response": [] },
+        { "name": "Create code-only payment account", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/settings/payment-accounts", "body": { "mode": "raw", "raw": "{\n  \"methodName\": \"Bank Transfer\",\n  \"providerName\": \"Example Bank\",\n  \"accountName\": \"Fashion Marketplace\",\n  \"accountNumber\": \"1234567890\",\n  \"instructions\": \"Include your order number in the transfer reference.\",\n  \"sortOrder\": 2,\n  \"status\": \"ACTIVE\"\n}", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Update payment account", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/settings/payment-accounts/1", "body": { "mode": "formdata", "formdata": [
+          { "key": "paymentCode", "value": "UPDATED-CODE", "type": "text" },
+          { "key": "sortOrder", "value": "1", "type": "text" },
+          { "key": "qrImage", "type": "file", "src": "" }
+        ] } }, "response": [] },
+        { "name": "Set payment account status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/settings/payment-accounts/1/status", "body": { "mode": "raw", "raw": "{ \"status\": \"INACTIVE\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Delete payment account", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/settings/payment-accounts/1" }, "response": [] }
+      ]
+    },
+    {
+      "name": "Public Payment Methods",
+      "item": [{ "name": "Get active payment methods", "request": { "method": "GET", "header": [], "auth": { "type": "noauth" }, "url": "{{baseUrl}}/api/v1/payment-methods" }, "response": [] }]
+    },
+    {
+      "name": "Admin Profile",
+      "item": [
+        { "name": "Get admin profile", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/profile" }, "response": [] },
+        { "name": "Update admin profile", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/profile", "body": { "mode": "raw", "raw": "{ \"name\": \"Platform Admin\", \"phone\": \"+20 100 000 0000\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
+        { "name": "Change admin password", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/profile/password", "body": { "mode": "raw", "raw": "{ \"currentPassword\": \"AdminPassword1!\", \"newPassword\": \"NewAdminPassword1!\" }", "options": { "raw": { "language": "json" } } } }, "response": [] }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        { "name": "Sales report", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/reports/sales?startDate=2026-11-01&endDate=2026-11-30&groupBy=day" }, "response": [] },
+        { "name": "Orders report", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/reports/orders?startDate=2026-11-01&endDate=2026-11-30&groupBy=day" }, "response": [] },
+        { "name": "Subscriptions report", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/reports/subscriptions?startDate=2026-11-01&endDate=2026-11-30&groupBy=month" }, "response": [] },
+        { "name": "Shops report", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/reports/shops?startDate=2026-11-01&endDate=2026-11-30&groupBy=month" }, "response": [] },
+        { "name": "Users report", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/reports/users?startDate=2026-11-01&endDate=2026-11-30&groupBy=month" }, "response": [] }
+      ]
+    }
+  ]
+}
