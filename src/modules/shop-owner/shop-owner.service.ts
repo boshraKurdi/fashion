@@ -98,6 +98,8 @@ export async function createShopRequest(ownerId: string, input: ShopRequestInput
     status: "PENDING" as const,
     rejection_reason: null,
     approved_at: null,
+    is_verified: false,
+    verified_at: null,
   };
 
   if (existingShop) {

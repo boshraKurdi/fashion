@@ -44,7 +44,9 @@
         { "name": "Approve shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/approve" }, "response": [] },
         { "name": "Reject shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/reject", "body": { "mode": "raw", "raw": "{ \"rejectionReason\": \"Incomplete documents\" }", "options": { "raw": { "language": "json" } } } }, "response": [] },
         { "name": "Suspend shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/suspend" }, "response": [] },
-        { "name": "Activate shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/activate" }, "response": [] }
+        { "name": "Activate shop", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/activate" }, "response": [] },
+        { "name": "Verify shop (show verified badge)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/verify" }, "response": [] },
+        { "name": "Remove shop verification", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/api/v1/admin/shops/1/unverify" }, "response": [] }
       ]
     },
     {

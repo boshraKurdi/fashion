@@ -67,6 +67,7 @@ const publicShopSelect = {
   status: true,
   created_at: true,
   approved_at: true,
+  is_verified: true,
 } satisfies Prisma.ShopSelect;
 
 const topProductSelect = {
@@ -79,7 +80,7 @@ const topProductSelect = {
   created_at: true,
   category: { select: { id: true, name: true, slug: true } },
   brand: { select: { id: true, name: true } },
-  shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true, status: true } },
+  shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true, status: true, is_verified: true } },
   images: { orderBy: [{ sort_order: "asc" }, { id: "asc" }], select: { id: true, image: true, is_primary: true, sort_order: true } },
   variants: { orderBy: [{ id: "asc" }], select: { id: true, price: true, sale_price: true, sku: true, color: { select: { id: true, name: true, hex_code: true } }, size: { select: { id: true, name: true, type: true } } } },
 } satisfies Prisma.ProductSelect;
@@ -258,7 +259,7 @@ marketplaceRouter.get("/home", async (_req, res) => {
         discount_value: true,
         start_at: true,
         end_at: true,
-        shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } },
+        shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true, is_verified: true } },
       },
     }),
     prisma.brand.findMany({
@@ -345,7 +346,7 @@ marketplaceRouter.get("/home/active-offers", async (_req, res) => {
       discount_value: true,
       start_at: true,
       end_at: true,
-      shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } },
+      shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true, is_verified: true } },
     },
   });
 
@@ -792,7 +793,7 @@ marketplaceRouter.get("/users/me/reviews", authenticate, async (req, res) => {
   const reviews = await prisma.shopReview.findMany({
     where: { user_id: BigInt(req.authUser.id) },
     orderBy: [{ created_at: "desc" }, { id: "desc" }],
-    select: { id: true, rating: true, comment: true, status: true, created_at: true, shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } } },
+    select: { id: true, rating: true, comment: true, status: true, created_at: true, shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true, is_verified: true } } },
   });
 
   res.status(200).json({ success: true, message: "Your reviews retrieved successfully", data: reviews });
@@ -811,7 +812,7 @@ marketplaceRouter.get("/offers", async (_req, res) => {
       discount_value: true,
       start_at: true,
       end_at: true,
-      shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } },
+      shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true, is_verified: true } },
     },
   });
 
@@ -831,7 +832,7 @@ marketplaceRouter.get("/offers/:id", async (req, res) => {
       discount_value: true,
       start_at: true,
       end_at: true,
-      shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true } },
+      shop: { select: { id: true, name: true, logo: true, facebook_url: true, instagram_url: true, whatsapp_url: true, is_verified: true } },
       offerProducts: { select: { product: { select: topProductSelect } } },
     },
   });

@@ -221,6 +221,30 @@ export async function setShopStatus(id: bigint, status: "APPROVED" | "REJECTED" 
   });
 }
 
+export async function verifyShop(id: bigint) {
+  const shop = await prisma.shop.findUnique({
+    where: { id },
+    select: { id: true, status: true },
+  });
+  if (!shop) throw new AppError("Shop not found", 404);
+  if (shop.status !== "APPROVED") {
+    throw new AppError("Only an approved shop can be verified", 409);
+  }
+  return prisma.shop.update({
+    where: { id },
+    data: { is_verified: true, verified_at: new Date() },
+  });
+}
+
+export async function unverifyShop(id: bigint) {
+  const shop = await prisma.shop.findUnique({ where: { id }, select: { id: true } });
+  if (!shop) throw new AppError("Shop not found", 404);
+  return prisma.shop.update({
+    where: { id },
+    data: { is_verified: false, verified_at: null },
+  });
+}
+
 export async function listCategories(query: any) {
   const where: any = {};
   if (query.search) where.name = { contains: query.search };

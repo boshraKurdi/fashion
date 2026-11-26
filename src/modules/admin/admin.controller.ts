@@ -112,6 +112,12 @@ export const rejectShopController: RequestHandler = async (req, res) => sendSucc
 export const suspendShopController: RequestHandler = async (req, res) => sendSuccess(res, await service.setShopStatus(getId(req), "SUSPENDED"));
 export const activateShopController: RequestHandler = async (req, res) => sendSuccess(res, await service.setShopStatus(getId(req), "APPROVED"));
 
+export const verifyShopController: RequestHandler = async (req, res) =>
+  sendSuccess(res, await service.verifyShop(getId(req)), "Shop verified successfully");
+
+export const unverifyShopController: RequestHandler = async (req, res) =>
+  sendSuccess(res, await service.unverifyShop(getId(req)), "Shop verification removed");
+
 export const listCategoriesController: RequestHandler = async (req, res) => sendPaginated(res, await service.listCategories(parse(paginationSchema, req.query)));
 export const getCategoryController: RequestHandler = async (req, res) => sendSuccess(res, await service.getCategory(getId(req)));
 export const createCategoryController: RequestHandler = async (req, res) => sendCreated(res, await service.createCategory(parse(categorySchema, req.body)));

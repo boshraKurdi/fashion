@@ -26,6 +26,8 @@ adminRouter.patch("/shops/:id/approve", admin.approveShopController);
 adminRouter.patch("/shops/:id/reject", admin.rejectShopController);
 adminRouter.patch("/shops/:id/suspend", admin.suspendShopController);
 adminRouter.patch("/shops/:id/activate", admin.activateShopController);
+adminRouter.patch("/shops/:id/verify", admin.verifyShopController);
+adminRouter.patch("/shops/:id/unverify", admin.unverifyShopController);
 adminRouter.patch("/shops/:id/decision", admin.decideShopController);
 adminRouter.post("/shops/:id/decision-email", admin.resendShopDecisionEmailController);
 
