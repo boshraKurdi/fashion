@@ -17,6 +17,34 @@ function parse<T extends z.ZodType>(schema: T, value: unknown): z.infer<T> {
   return result.data;
 }
 
+function parseMultipartJson(body: Record<string, unknown>): Record<string, unknown> {
+  const parsed = { ...body };
+  for (const key of ["variants", "imageMetadata"]) {
+    if (typeof parsed[key] === "string") {
+      try {
+        parsed[key] = JSON.parse(parsed[key]);
+      } catch {
+        throw new AppError(`Invalid ${key} JSON`, 400);
+      }
+      for (const key of ["price", "salePrice"]) {
+        if (typeof parsed[key] === "string" && parsed[key].trim()) parsed[key] = Number(parsed[key]);
+      }
+      if (typeof parsed.isPrimary === "string") parsed.isPrimary = parsed.isPrimary === "true";
+      if (typeof parsed.sortOrder === "string" && parsed.sortOrder.trim()) parsed.sortOrder = Number(parsed.sortOrder);
+      if (parsed.imageMetadata && Array.isArray(parsed.imageMetadata)) {
+        parsed.imageMetadata = parsed.imageMetadata.map((item) => {
+          if (!item || typeof item !== "object") return item;
+          const metadata = { ...(item as Record<string, unknown>) };
+          if (typeof metadata.isPrimary === "string") metadata.isPrimary = metadata.isPrimary === "true";
+          if (typeof metadata.sortOrder === "string") metadata.sortOrder = Number(metadata.sortOrder);
+          return metadata;
+        });
+      }
+    }
+  }
+  return parsed;
+}
+
 function getOwnerId(req: Request): string {
   if (!req.authUser) throw new AppError("Authentication is required", 401);
   return req.authUser.id;
@@ -85,7 +113,21 @@ export const getProductController: RequestHandler = async (req, res) => {
 };
 
 export const createProductController: RequestHandler = async (req, res) => {
-  const data = await service.createProduct(getOwnerId(req), parse(productCreateSchema, req.body));
+  const body = parseMultipartJson(req.body as Record<string, unknown>);
+  const files = req.files && !Array.isArray(req.files) ? req.files.images ?? [] : [];
+  let imageMetadata: Array<{ isPrimary?: boolean; sortOrder?: number }> = [];
+  if (body.imageMetadata) {
+    if (!Array.isArray(body.imageMetadata)) throw new AppError("imageMetadata must be an array", 400);
+    imageMetadata = body.imageMetadata as Array<{ isPrimary?: boolean; sortOrder?: number }>;
+  }
+  const uploadedImages = files.map((file, index) => ({
+    image: `/uploads/products/${file.filename}`,
+    isPrimary: imageMetadata[index]?.isPrimary ?? false,
+    sortOrder: imageMetadata[index]?.sortOrder ?? index,
+  }));
+  delete body.imageMetadata;
+  body.images = uploadedImages.length ? uploadedImages : body.images;
+  const data = await service.createProduct(getOwnerId(req), parse(productCreateSchema, body));
   res.status(201).json({ success: true, message: "Product created successfully", data });
 };
 
@@ -106,12 +148,21 @@ export const updateProductStatusController: RequestHandler = async (req, res) =>
 };
 
 export const createProductImageController: RequestHandler = async (req, res) => {
-  const data = await service.createProductImage(getOwnerId(req), getId(req), parse(imageCreateSchema, req.body));
+  const file = req.files && !Array.isArray(req.files) ? req.files.images?.[0] : undefined;
+  const body = parse(imageCreateSchema, parseMultipartJson({ ...req.body as Record<string, unknown>, ...(file ? { image: `/uploads/products/${file.filename}` } : {}) }));
+  if (!body.image) throw new AppError("A product image file is required", 400);
+  const data = await service.createProductImage(getOwnerId(req), getId(req), {
+    image: body.image,
+    isPrimary: body.isPrimary,
+    sortOrder: body.sortOrder,
+  });
   res.status(201).json({ success: true, message: "Product image added successfully", data });
 };
 
 export const updateProductImageController: RequestHandler = async (req, res) => {
-  const data = await service.updateProductImage(getOwnerId(req), getId(req), getId(req, "imageId"), parse(imageUpdateSchema, req.body));
+  const file = req.files && !Array.isArray(req.files) ? req.files.images?.[0] : undefined;
+  const body = parse(imageUpdateSchema, parseMultipartJson({ ...req.body as Record<string, unknown>, ...(file ? { image: `/uploads/products/${file.filename}` } : {}) }));
+  const data = await service.updateProductImage(getOwnerId(req), getId(req), getId(req, "imageId"), body);
   res.status(200).json({ success: true, message: "Product image updated successfully", data });
 };
 

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../../middlewares/role.middleware.js";
-import { paymentQrUploadMiddleware } from "../../middlewares/shop-image-upload.middleware.js";
+import { assetImageUploadMiddleware, paymentQrUploadMiddleware } from "../../middlewares/shop-image-upload.middleware.js";
 import * as admin from "./admin.controller.js";
 
 export const adminRouter = Router();
@@ -33,15 +33,15 @@ adminRouter.post("/shops/:id/decision-email", admin.resendShopDecisionEmailContr
 
 adminRouter.get("/categories", admin.listCategoriesController);
 adminRouter.get("/categories/:id", admin.getCategoryController);
-adminRouter.post("/categories", admin.createCategoryController);
-adminRouter.patch("/categories/:id", admin.updateCategoryController);
+adminRouter.post("/categories", assetImageUploadMiddleware, admin.createCategoryController);
+adminRouter.patch("/categories/:id", assetImageUploadMiddleware, admin.updateCategoryController);
 adminRouter.delete("/categories/:id", admin.deleteCategoryController);
 adminRouter.patch("/categories/:id/status", admin.setCategoryStatusController);
 
 adminRouter.get("/brands", admin.listBrandsController);
 adminRouter.get("/brands/:id", admin.getBrandController);
-adminRouter.post("/brands", admin.createBrandController);
-adminRouter.patch("/brands/:id", admin.updateBrandController);
+adminRouter.post("/brands", assetImageUploadMiddleware, admin.createBrandController);
+adminRouter.patch("/brands/:id", assetImageUploadMiddleware, admin.updateBrandController);
 adminRouter.delete("/brands/:id", admin.deleteBrandController);
 adminRouter.patch("/brands/:id/status", admin.setBrandStatusController);
 

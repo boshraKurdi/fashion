@@ -93,7 +93,7 @@ export const productListQuerySchema = z.object({
 });
 
 export const imageCreateSchema = z.object({
-  image: z.string().trim().min(1).max(500),
+  image: z.string().trim().min(1).max(500).optional(),
   isPrimary: z.boolean().default(false),
   sortOrder: z.number().int().min(0).default(0),
 }).strict();

@@ -91,8 +91,22 @@
           "name": "Create product",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Linen Shirt\",\n  \"description\": \"Relaxed-fit linen shirt\",\n  \"categoryId\": \"1\",\n  \"brandId\": null,\n  \"price\": 59.99,\n  \"salePrice\": 49.99,\n  \"status\": \"DRAFT\",\n  \"images\": [\n    { \"image\": \"/uploads/linen-shirt-front.jpg\", \"isPrimary\": true, \"sortOrder\": 0 },\n    { \"image\": \"/uploads/linen-shirt-back.jpg\", \"isPrimary\": false, \"sortOrder\": 1 }\n  ],\n  \"variants\": [\n    { \"colorId\": \"1\", \"sizeId\": \"1\", \"price\": 59.99, \"salePrice\": 49.99, \"sku\": \"LINEN-SHIRT-NAVY-M\" }\n  ]\n}", "options": { "raw": { "language": "json" } } },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Linen Shirt", "type": "text" },
+                { "key": "description", "value": "Relaxed-fit linen shirt", "type": "text" },
+                { "key": "categoryId", "value": "1", "type": "text" },
+                { "key": "brandId", "value": "", "type": "text" },
+                { "key": "price", "value": "59.99", "type": "text" },
+                { "key": "salePrice", "value": "49.99", "type": "text" },
+                { "key": "status", "value": "DRAFT", "type": "text" },
+                { "key": "variants", "value": "[{\"colorId\":\"1\",\"sizeId\":\"1\",\"price\":59.99,\"salePrice\":49.99,\"sku\":\"LINEN-SHIRT-NAVY-M\"}]", "type": "text" },
+                { "key": "imageMetadata", "value": "[{\"isPrimary\":true,\"sortOrder\":0},{\"isPrimary\":false,\"sortOrder\":1}]", "type": "text" },
+                { "key": "images", "type": "file", "src": "" },
+                { "key": "images", "type": "file", "src": "" }
+              ]
+            },
             "url": "{{baseUrl}}/api/v1/shop-owner/products"
           }
         },
@@ -127,8 +141,7 @@
           "name": "Add product image",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"image\": \"/uploads/linen-shirt-detail.jpg\",\n  \"isPrimary\": false,\n  \"sortOrder\": 2\n}", "options": { "raw": { "language": "json" } } },
+            "body": { "mode": "formdata", "formdata": [{ "key": "isPrimary", "value": "false", "type": "text" }, { "key": "sortOrder", "value": "2", "type": "text" }, { "key": "images", "type": "file", "src": "" }] },
             "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}/images"
           }
         },
@@ -136,8 +149,7 @@
           "name": "Update product image",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"isPrimary\": true,\n  \"sortOrder\": 0\n}", "options": { "raw": { "language": "json" } } },
+            "body": { "mode": "formdata", "formdata": [{ "key": "isPrimary", "value": "true", "type": "text" }, { "key": "sortOrder", "value": "0", "type": "text" }, { "key": "images", "type": "file", "src": "" }] },
             "url": "{{baseUrl}}/api/v1/shop-owner/products/{{productId}}/images/{{imageId}}"
           }
         },

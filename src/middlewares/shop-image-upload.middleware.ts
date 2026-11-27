@@ -8,6 +8,9 @@ import { AppError } from "../modules/auth/auth.service.js";
 export const uploadDirectory = path.resolve(process.cwd(), "uploads");
 const shopImagesDirectory = path.join(uploadDirectory, "shops");
 export const paymentQrDirectory = path.join(uploadDirectory, "payment-accounts");
+export const categoryImagesDirectory = path.join(uploadDirectory, "categories");
+export const brandImagesDirectory = path.join(uploadDirectory, "brands");
+export const productImagesDirectory = path.join(uploadDirectory, "products");
 const extensionByMimeType: Record<string, string> = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
@@ -152,6 +155,66 @@ export const paymentQrUploadMiddleware: RequestHandler = (req, res, next) => {
       }
       if (!(await hasValidImageSignature(file))) {
         await rm(file.path, { force: true });
+        next(new AppError("Uploaded file content is not a valid JPEG, PNG, or WebP image", 400));
+        return;
+      }
+      next();
+    })().catch(next);
+  });
+};
+
+const assetDirectoryByField: Record<string, string> = {
+  image: categoryImagesDirectory,
+  logo: brandImagesDirectory,
+  images: productImagesDirectory,
+};
+
+const assetUpload = multer({
+  storage: multer.diskStorage({
+    destination(req, file, callback) {
+      const directory = assetDirectoryByField[file.fieldname] ?? path.join(uploadDirectory, "misc");
+      mkdir(directory, { recursive: true }).then(
+        () => callback(null, directory),
+        (error: Error) => callback(error, directory),
+      );
+    },
+    filename(_req, file, callback) {
+      callback(null, `${randomUUID()}${extensionByMimeType[file.mimetype] ?? ".bin"}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024, files: 50, fields: 30, fieldSize: 64 * 1024 },
+  fileFilter(_req, file, callback) {
+    if (!Object.hasOwn(extensionByMimeType, file.mimetype)) {
+      callback(new AppError("Only JPEG, PNG, and WebP images are allowed", 400));
+      return;
+    }
+    callback(null, true);
+  },
+}).fields([
+  { name: "image", maxCount: 1 },
+  { name: "logo", maxCount: 1 },
+  { name: "images", maxCount: 50 },
+]);
+
+export const assetImageUploadMiddleware: RequestHandler = (req, res, next) => {
+  assetUpload(req, res, (error: unknown) => {
+    if (error) {
+      if (error instanceof multer.MulterError) {
+        const message = error.code === "LIMIT_FILE_SIZE"
+          ? "Each image must be 5 MB or smaller"
+          : "Invalid image upload";
+        next(new AppError(message, 400));
+        return;
+      }
+      next(error);
+      return;
+    }
+
+    void (async () => {
+      const files = getUploadedFiles(req);
+      const signatures = await Promise.all(files.map(hasValidImageSignature));
+      if (signatures.some((valid) => !valid)) {
+        await removeUploadedFiles(req);
         next(new AppError("Uploaded file content is not a valid JPEG, PNG, or WebP image", 400));
         return;
       }

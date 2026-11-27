@@ -120,8 +120,18 @@ export const unverifyShopController: RequestHandler = async (req, res) =>
 
 export const listCategoriesController: RequestHandler = async (req, res) => sendPaginated(res, await service.listCategories(parse(paginationSchema, req.query)));
 export const getCategoryController: RequestHandler = async (req, res) => sendSuccess(res, await service.getCategory(getId(req)));
-export const createCategoryController: RequestHandler = async (req, res) => sendCreated(res, await service.createCategory(parse(categorySchema, req.body)));
-export const updateCategoryController: RequestHandler = async (req, res) => sendSuccess(res, await service.updateCategory(getId(req), parse(categorySchema.partial(), req.body)));
+export const createCategoryController: RequestHandler = async (req, res) => {
+  const categoryBody = { ...req.body as Record<string, unknown> };
+  if (categoryBody.parentId === "") delete categoryBody.parentId;
+  const body = parse(categorySchema, categoryBody);
+  const file = req.files && !Array.isArray(req.files) ? req.files.image?.[0] : undefined;
+  sendCreated(res, await service.createCategory({ ...body, image: file ? `/uploads/categories/${file.filename}` : null }));
+};
+export const updateCategoryController: RequestHandler = async (req, res) => {
+  const body = parse(categorySchema.partial(), req.body);
+  const file = req.files && !Array.isArray(req.files) ? req.files.image?.[0] : undefined;
+  sendSuccess(res, await service.updateCategory(getId(req), { ...body, ...(file ? { image: `/uploads/categories/${file.filename}` } : {}) }));
+};
 export const deleteCategoryController: RequestHandler = async (req, res) => sendSuccess(res, await service.deleteCategory(getId(req)), "Category deleted");
 export const setCategoryStatusController: RequestHandler = async (req, res) => {
   const status = parse(statusSchema, req.body).status;
@@ -130,8 +140,16 @@ export const setCategoryStatusController: RequestHandler = async (req, res) => {
 
 export const listBrandsController: RequestHandler = async (req, res) => sendPaginated(res, await service.listBrands(parse(paginationSchema, req.query)));
 export const getBrandController: RequestHandler = async (req, res) => sendSuccess(res, await service.getBrand(getId(req)));
-export const createBrandController: RequestHandler = async (req, res) => sendCreated(res, await service.createBrand(parse(brandSchema, req.body)));
-export const updateBrandController: RequestHandler = async (req, res) => sendSuccess(res, await service.updateBrand(getId(req), parse(brandSchema.partial(), req.body)));
+export const createBrandController: RequestHandler = async (req, res) => {
+  const body = parse(brandSchema, req.body);
+  const file = req.files && !Array.isArray(req.files) ? req.files.logo?.[0] : undefined;
+  sendCreated(res, await service.createBrand({ ...body, logo: file ? `/uploads/brands/${file.filename}` : null }));
+};
+export const updateBrandController: RequestHandler = async (req, res) => {
+  const body = parse(brandSchema.partial(), req.body);
+  const file = req.files && !Array.isArray(req.files) ? req.files.logo?.[0] : undefined;
+  sendSuccess(res, await service.updateBrand(getId(req), { ...body, ...(file ? { logo: `/uploads/brands/${file.filename}` } : {}) }));
+};
 export const deleteBrandController: RequestHandler = async (req, res) => sendSuccess(res, await service.deleteBrand(getId(req)), "Brand deleted");
 export const setBrandStatusController: RequestHandler = async (req, res) => sendSuccess(res, await service.setBrandStatus(getId(req), Number(parse(statusSchema, req.body).status)));
 

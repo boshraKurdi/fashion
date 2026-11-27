@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../../middlewares/role.middleware.js";
+import { assetImageUploadMiddleware } from "../../middlewares/shop-image-upload.middleware.js";
 import {
   archiveProductController, createBranchController, createOfferController, createProductController,
   createProductImageController, createProductVariantController, createSubscriptionController,
@@ -24,13 +25,13 @@ shopOwnerRouter.patch("/shop", updateShopController);
 
 shopOwnerRouter.get("/products", listProductsController);
 shopOwnerRouter.get("/products/:id", getProductController);
-shopOwnerRouter.post("/products", createProductController);
+shopOwnerRouter.post("/products", assetImageUploadMiddleware, createProductController);
 shopOwnerRouter.patch("/products/:id", updateProductController);
 shopOwnerRouter.delete("/products/:id", archiveProductController);
 shopOwnerRouter.patch("/products/:id/status", updateProductStatusController);
-shopOwnerRouter.post("/products/:id/images", createProductImageController);
+shopOwnerRouter.post("/products/:id/images", assetImageUploadMiddleware, createProductImageController);
 shopOwnerRouter.delete("/products/:id/images/:imageId", deleteProductImageController);
-shopOwnerRouter.patch("/products/:id/images/:imageId", updateProductImageController);
+shopOwnerRouter.patch("/products/:id/images/:imageId", assetImageUploadMiddleware, updateProductImageController);
 shopOwnerRouter.post("/products/:id/variants", createProductVariantController);
 shopOwnerRouter.patch("/products/:id/variants/:variantId", updateProductVariantController);
 shopOwnerRouter.delete("/products/:id/variants/:variantId", deleteProductVariantController);
